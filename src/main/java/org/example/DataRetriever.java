@@ -32,4 +32,31 @@ public class DataRetriever {
         }
         return list;
     }
+
+    VenteParModele venteParModele() {
+        DBConnection dbConnection = new DBConnection();
+        try(Connection connection = dbConnection.getConnection();
+                PreparedStatement preparedStatement = connection.prepareStatement("""
+                    select
+                            sum(case when m.modele='GETZ' then v.quantite else 0 end) as piece_getz,
+                            sum(case when m.modele='PRIDE' then v.quantite else 0 end) as piece_pride,
+                            sum(case when m.modele='LACETTI' then v.quantite else 0 end) as piece_lacetti
+                    from vente v
+                    join piece_auto pa on v.id_piece_auto = pa.id
+                    join modele_voiture m on pa.id_modele_voiture = m.id;
+""");
+                ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if(resultSet.next()){
+                        VenteParModele venteParModele = new VenteParModele();
+                        venteParModele.setPieceGetz(resultSet.getInt("piece_getz"));
+                        venteParModele.setPiecePride(resultSet.getInt("piece_pride"));
+                        venteParModele.setPieceLacetti(resultSet.getInt("piece_lacetti"));
+                        return venteParModele;
+
+                    }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
 }
