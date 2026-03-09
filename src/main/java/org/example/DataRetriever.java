@@ -59,4 +59,26 @@ public class DataRetriever {
         }
         return null;
     }
+
+    PTKia prixTotalPourKIA() {
+        DBConnection dbConnection = new DBConnection();
+        try(Connection connection = dbConnection.getConnection();
+                PreparedStatement preparedStatement = connection.prepareStatement("""
+                    select
+                        sum(case when mv.marque = 'KIA' then v.quantite*pa.prix else 0 end) as pt_kia
+                    from vente v
+                    join piece_auto pa on v.id_piece_auto = pa.id
+                    join modele_voiture mv on pa.id_modele_voiture = mv.id;
+""");
+                ResultSet resultSet = preparedStatement.executeQuery()){
+            if(resultSet.next()){
+                PTKia prixKia = new PTKia();
+                prixKia.setPrixKia(resultSet.getDouble("pt_kia"));
+                return prixKia;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
 }
